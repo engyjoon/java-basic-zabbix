@@ -13,6 +13,7 @@ public class TestJdbcUtil {
 		Connection conn = JdbcUtil.getConnection();
 		assertNotNull(conn);
 		System.out.println(conn);
+		JdbcUtil.close(conn);
 	}
 
 }
