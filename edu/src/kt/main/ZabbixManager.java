@@ -13,14 +13,23 @@ import kt.vo.ItemVO;
 
 public class ZabbixManager {
 	
+	ArrayList<HostVO> listHostVO;
+	ArrayList<ItemVO> listItemVO;
+	ArrayList<HistoryVO> listHistoryVO;
+	
+	Scanner scanner;
+	
 	ZabbixService zabbixService = ZabbixService.getInstance();
 	
 	private static final String SAVE_DIRECTORY = "/Users/engyjoon/temp/";
 	
+	public ZabbixManager() {
+		scanner = new Scanner(System.in);
+	}
+	
 	public static void main(String[] args) {
 		ZabbixManager zabbixManager = new ZabbixManager();
 		
-		Scanner scanner = new Scanner(System.in);
 		boolean isLoop = true;
 		
 		System.out.println("--------------------------------------------------");
@@ -29,9 +38,9 @@ public class ZabbixManager {
 		
 		while(isLoop) {
 			printMenu();
-			isLoop = zabbixManager.action(scanner.nextLine());
+			isLoop = zabbixManager.action(zabbixManager.scanner.nextLine());
 			
-			if(!isLoop) exitProgram(scanner);
+			if(!isLoop) exitProgram(zabbixManager.scanner);
 		}
 		
 	}
@@ -63,15 +72,15 @@ public class ZabbixManager {
 	}
 	
 	private void showHost() {
-		ArrayList<HostVO> list = new ArrayList<>();
-		list = zabbixService.selectHostList();
+		listHostVO = new ArrayList<>();
+		listHostVO = zabbixService.selectHostList();
 		
 		System.out.println("---------------------------------------------------");
 		System.out.println("hostid | host            | status | item");
 		System.out.println("---------------------------------------------------");
 		
-		for(HostVO host : list) {
-			System.out.printf("%-6d | %-15s | %-6d | %5d \n", host.getHostid(), host.getHost(), host.getStatus(), zabbixService.selectItemCountByHostid(host.getHostid()));
+		for(HostVO hostVO : listHostVO) {
+			System.out.printf("%-6d | %-15s | %-6d | %5d \n", hostVO.getHostid(), hostVO.getHost(), hostVO.getStatus(), zabbixService.selectItemCountByHostid(hostVO.getHostid()));
 		}
 		
 		System.out.println("---------------------------------------------------");
@@ -79,7 +88,6 @@ public class ZabbixManager {
 	}
 	
 	private void showItem() {
-		Scanner scanner = new Scanner(System.in);
 		System.out.print("hostid > ");
 		String input = scanner.nextLine();
 		
@@ -90,15 +98,15 @@ public class ZabbixManager {
 		
 		long hostid = Long.parseLong(input);
 		
-		ArrayList<ItemVO> list = new ArrayList<>();
-		list = zabbixService.selectItemListByHostid(hostid);
+		listItemVO = new ArrayList<>();
+		listItemVO = zabbixService.selectItemListByHostid(hostid);
 		
 		System.out.println("----------------------------------------------------------------------------------------");
 		System.out.println("itemid | history | name");
 		System.out.println("----------------------------------------------------------------------------------------");
 		
-		for(ItemVO item : list) {
-			System.out.printf("%-6d | %7d | %s \n", item.getItemid(), zabbixService.selectHistoryCountByItemid(item), item.getName());
+		for(ItemVO itemVO : listItemVO) {
+			System.out.printf("%-6d | %7d | %s \n", itemVO.getItemid(), zabbixService.selectHistoryCountByItemVO(itemVO), itemVO.getName());
 		}
 		
 		System.out.println("----------------------------------------------------------------------------------------");
@@ -106,7 +114,6 @@ public class ZabbixManager {
 	}
 	
 	private void showHistory() {
-		Scanner scanner = new Scanner(System.in);
 		System.out.print("itemid > ");
 		String input = scanner.nextLine();
 		
@@ -117,15 +124,15 @@ public class ZabbixManager {
 		
 		long itemid = Long.parseLong(input);
 		
-		ArrayList<HistoryVO> list = new ArrayList<>();
-		list = zabbixService.selectHistoryList(zabbixService.selectItemByItemid(itemid));
+		listHistoryVO = new ArrayList<>();
+		listHistoryVO = zabbixService.selectHistoryList(zabbixService.selectItemByItemid(itemid));
 		
 		System.out.println("----------------------------------");
 		System.out.println("clock               | value");
 		System.out.println("----------------------------------");
 		
-		for(HistoryVO history : list) {
-			System.out.printf("%s | %s \n", history.getClock(), history.getValue());
+		for(HistoryVO historyVO : listHistoryVO) {
+			System.out.printf("%s | %s \n", historyVO.getClock(), historyVO.getValue());
 		}
 		
 		System.out.println("----------------------------------");
@@ -137,7 +144,6 @@ public class ZabbixManager {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 		File file = new File(SAVE_DIRECTORY + "zabbix_" + now.format(formatter));
 		
-		Scanner scanner = new Scanner(System.in);
 		System.out.print("itemid > ");
 		String input = scanner.nextLine();
 		
@@ -169,5 +175,6 @@ public class ZabbixManager {
 	private static void exitProgram(Scanner scanner) {
 		System.out.println("");
 		System.out.println("Exit Zabbix Manager");
+		scanner.close();
 	}
 }

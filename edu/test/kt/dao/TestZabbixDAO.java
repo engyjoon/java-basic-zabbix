@@ -15,15 +15,12 @@ import kt.vo.ItemVO;
 public class TestZabbixDAO {
 
 	@Test
-	public void testSelectHistoryCount() {
+	public void testGetInstance() {
 		ZabbixDAO zabbixDAO = ZabbixDAO.getInstance();
-		ItemVO itemVO = new ItemVO();
-		itemVO.setItemid(23287);
-		itemVO.setValueType(ZabbixDAO.INTEGER);
-		int result = zabbixDAO.selectHistoryCount(itemVO);
-		System.out.println("[testSelectHistoryCount] item count : " + result);
+		assertNotNull(zabbixDAO);
+		System.out.println(zabbixDAO);
 	}
-
+	
 	@Test
 	public void testSelectHostList() {
 		ZabbixDAO zabbixDAO = ZabbixDAO.getInstance();
@@ -65,6 +62,16 @@ public class TestZabbixDAO {
 		System.out.println("[testSelectHistoryList] history count : " + result);
 	}
 	
+	@Test
+	public void testSelectHistoryCountByItemVO() {
+		ZabbixDAO zabbixDAO = ZabbixDAO.getInstance();
+		ItemVO itemVO = new ItemVO();
+		itemVO.setItemid(23287);
+		itemVO.setValueType(ZabbixDAO.INTEGER);
+		int result = zabbixDAO.selectHistoryCountByItemVO(itemVO);
+		System.out.println("[testSelectHistoryCount] item count : " + result);
+	}
+
 	@Test
 	public void testSelectItemByItemid() {
 		ZabbixDAO zabbixDAO = ZabbixDAO.getInstance();

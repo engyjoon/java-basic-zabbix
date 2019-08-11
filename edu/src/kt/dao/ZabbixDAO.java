@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
@@ -28,33 +29,6 @@ public class ZabbixDAO {
 	public static ZabbixDAO getInstance() {
 		if(zabbixDAO == null) zabbixDAO = new ZabbixDAO();
 		return zabbixDAO;
-	}
-	
-	public int selectHistoryCount(ItemVO itemVO) {
-		StringBuffer query = new StringBuffer();
-		query.append("select count(*) ");
-		query.append("from " + getHistoryTable(itemVO.getValueType()) + " ");
-		query.append("where itemid = ?");
-		query.append("  and clock > extract(epoch from date_trunc('second', now() - interval '1 hour'))");
-		
-		int result = 0;
-		
-		try {
-			Connection conn = JdbcUtil.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement(query.toString());
-			pstmt.setLong(1, itemVO.getItemid());
-			ResultSet rs = pstmt.executeQuery();
-			
-			try(conn; pstmt; rs) {
-				if(rs.next()) result = rs.getInt(1);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return result;
 	}
 	
 	public ArrayList<HostVO> selectHostList() {
@@ -185,13 +159,41 @@ public class ZabbixDAO {
 					HistoryVO historyVO = new HistoryVO();
 					
 					Instant instant = Instant.ofEpochSecond(rs.getInt("CLOCK"));
-					LocalDateTime zdt = LocalDateTime.ofInstant(instant, ZoneId.of("Asia/Seoul"));
+					//LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.of("Asia/Seoul"));
+					ZonedDateTime zdt = instant.atZone(ZoneId.of("Asia/Seoul"));
 					
 					historyVO.setClock(zdt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")));
 					historyVO.setValue(getHistoryValue(rs, itemVO.getValueType()).toString());
 					
 					result.add(historyVO);
 				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
+	public int selectHistoryCountByItemVO(ItemVO itemVO) {
+		StringBuffer query = new StringBuffer();
+		query.append("select count(*) ");
+		query.append("from " + getHistoryTable(itemVO.getValueType()) + " ");
+		query.append("where itemid = ?");
+		query.append("  and clock > extract(epoch from date_trunc('second', now() - interval '1 hour'))");
+		
+		int result = 0;
+		
+		try {
+			Connection conn = JdbcUtil.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(query.toString());
+			pstmt.setLong(1, itemVO.getItemid());
+			ResultSet rs = pstmt.executeQuery();
+			
+			try(conn; pstmt; rs) {
+				if(rs.next()) result = rs.getInt(1);
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

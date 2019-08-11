@@ -36,8 +36,8 @@ public class ZabbixService {
 		return zabbixDAO.selectItemListByHostid(hostid);
 	}
 	
-	public int selectHistoryCountByItemid(ItemVO itemVO) {
-		return zabbixDAO.selectHistoryCount(itemVO);
+	public int selectHistoryCountByItemVO(ItemVO itemVO) {
+		return zabbixDAO.selectHistoryCountByItemVO(itemVO);
 	}
 	
 	public ItemVO selectItemByItemid(long itemid) {
