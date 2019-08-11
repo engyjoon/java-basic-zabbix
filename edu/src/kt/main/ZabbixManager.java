@@ -1,8 +1,5 @@
 package kt.main;
 
-import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -21,7 +18,8 @@ public class ZabbixManager {
 	
 	ZabbixService zabbixService = ZabbixService.getInstance();
 	
-	private static final String SAVE_DIRECTORY = "/Users/engyjoon/temp/";
+	private static final String SAVE_DIRECTORY = "/Users/engyjoon/temp";
+	//private static final String SAVE_DIRECTORY = "c:\\temp";
 	
 	public ZabbixManager() {
 		scanner = new Scanner(System.in);
@@ -30,45 +28,55 @@ public class ZabbixManager {
 	public static void main(String[] args) {
 		ZabbixManager zabbixManager = new ZabbixManager();
 		
+		printTitle();
+		
 		boolean isLoop = true;
-		
-		System.out.println("--------------------------------------------------");
-		System.out.println("                  Zabbix Manager                  ");
-		System.out.println("--------------------------------------------------");
-		
 		while(isLoop) {
 			printMenu();
 			isLoop = zabbixManager.action(zabbixManager.scanner.nextLine());
-			
 			if(!isLoop) exitProgram(zabbixManager.scanner);
 		}
-		
+	}
+	
+	private static void printTitle() {
+		System.out.println("--------------------------------------------------");
+		System.out.println("                  Zabbix Manager                  ");
+		System.out.println("--------------------------------------------------");
+	}
+	
+	private static void printMenu() {
+		System.out.println("[Menu]");
+		System.out.println("1) Show host");
+		System.out.println("2) Show item");
+		System.out.println("3) Show history");
+		System.out.println("4) Export history");
+		System.out.println("q) Exit");
+		System.out.print("> ");
 	}
 	
 	private boolean action(String input) {
 		boolean result = true;
 		
 		switch(input) {
-			case "1":
-				showHost();
+			case "1": showHost(); System.out.println();
 				break;
-			case "2":
-				showItem();
+			case "2": showItem(); System.out.println();
 				break;
-			case "3":
-				showHistory();
+			case "3": showHistory(); System.out.println();
 				break;
-			case "4":
-				exportHistory();
+			case "4": exportHistory(); System.out.println();
 				break;
-			case "q":
-				result = false;
+			case "q": result = false; System.out.println();
 				break;
-			default :
-				System.out.println();
+			default : System.out.println();
 		}
 		
 		return result;
+	}
+	
+	private static void exitProgram(Scanner scanner) {
+		System.out.println("Exit Zabbix Manager");
+		scanner.close();
 	}
 	
 	private void showHost() {
@@ -84,22 +92,15 @@ public class ZabbixManager {
 		}
 		
 		System.out.println("---------------------------------------------------");
-		System.out.println();
 	}
 	
 	private void showItem() {
 		System.out.print("hostid > ");
 		String input = scanner.nextLine();
-		
-		if(input.contentEquals("")) {
-			System.out.println();
-			return;
-		}
-		
-		long hostid = Long.parseLong(input);
+		if(input.contentEquals("")) return;
 		
 		listItemVO = new ArrayList<>();
-		listItemVO = zabbixService.selectItemListByHostid(hostid);
+		listItemVO = zabbixService.selectItemListByHostid(Long.parseLong(input));
 		
 		System.out.println("----------------------------------------------------------------------------------------");
 		System.out.println("itemid | history | name");
@@ -110,22 +111,15 @@ public class ZabbixManager {
 		}
 		
 		System.out.println("----------------------------------------------------------------------------------------");
-		System.out.println();
 	}
 	
 	private void showHistory() {
 		System.out.print("itemid > ");
 		String input = scanner.nextLine();
-		
-		if(input.contentEquals("")) {
-			System.out.println();
-			return;
-		}
-		
-		long itemid = Long.parseLong(input);
+		if(input.contentEquals("")) return;
 		
 		listHistoryVO = new ArrayList<>();
-		listHistoryVO = zabbixService.selectHistoryList(zabbixService.selectItemByItemid(itemid));
+		listHistoryVO = zabbixService.selectHistoryList(zabbixService.selectItemByItemid(Long.parseLong(input)));
 		
 		System.out.println("----------------------------------");
 		System.out.println("clock               | value");
@@ -136,45 +130,16 @@ public class ZabbixManager {
 		}
 		
 		System.out.println("----------------------------------");
-		System.out.println();
 	}
 	
 	private void exportHistory() {
-		LocalDateTime now = LocalDateTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-		File file = new File(SAVE_DIRECTORY + "zabbix_" + now.format(formatter));
-		
 		System.out.print("itemid > ");
 		String input = scanner.nextLine();
+		if(input.contentEquals("")) return;
 		
-		if(input.contentEquals("")) {
-			System.out.println();
-			return;
-		}
-		
-		long itemid = Long.parseLong(input);
-		
-		boolean isSuccess = zabbixService.exportHistoryList(zabbixService.selectItemByItemid(itemid), file);
+		boolean isSuccess = zabbixService.exportHistoryList(zabbixService.selectItemByItemid(Long.parseLong(input)), SAVE_DIRECTORY);
 		
 		if(isSuccess) System.out.println("Success");
 		else System.out.println("Fail");
-		
-		System.out.println();
-	}
-
-	private static void printMenu() {
-		System.out.println("[Menu]");
-		System.out.println("1) Show host");
-		System.out.println("2) Show item");
-		System.out.println("3) Show history");
-		System.out.println("4) Export history");
-		System.out.println("q) Exit");
-		System.out.print("> ");
-	}
-	
-	private static void exitProgram(Scanner scanner) {
-		System.out.println("");
-		System.out.println("Exit Zabbix Manager");
-		scanner.close();
 	}
 }

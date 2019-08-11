@@ -3,6 +3,8 @@ package kt.service;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.StringJoiner;
 
@@ -48,7 +50,11 @@ public class ZabbixService {
 		return zabbixDAO.selectHistoryList(itemVO);
 	}
 	
-	public boolean exportHistoryList(ItemVO itemVO, File file) {
+	public boolean exportHistoryList(ItemVO itemVO, String directory) {
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		File file = new File(directory, "zabbix_" + now.format(formatter));
+		
 		ArrayList<HistoryVO> list = new ArrayList<>();
 		list = zabbixDAO.selectHistoryList(itemVO);
 		
