@@ -32,6 +32,14 @@ public class TestZabbixDAO {
 	}
 	
 	@Test
+	public void testSelectItemCountByHostid() {
+		ZabbixDAO zabbixDAO = ZabbixDAO.getInstance();
+		int result = zabbixDAO.selectItemCountByHostid(10084);
+		assertTrue(result > 0);
+		System.out.println("[testSelectItemCountByHostid] item Count : " + result);
+	}
+	
+	@Test
 	public void testSelectHostidByHost() {
 		ZabbixDAO zabbixDAO = ZabbixDAO.getInstance();
 		long result = zabbixDAO.selectHostidByHost("Zabbix server");
