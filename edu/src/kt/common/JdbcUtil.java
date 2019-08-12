@@ -13,7 +13,6 @@ public class JdbcUtil {
 	private static final String DB_PASS = "zabbix";
 	
 	public static Connection getConnection() {
-		
 		Connection conn = null;
 		
 		try {

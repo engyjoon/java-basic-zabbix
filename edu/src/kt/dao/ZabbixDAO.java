@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -18,14 +17,18 @@ import kt.vo.ItemVO;
 
 public class ZabbixDAO {
 	
+	// 상수
 	public static final int INTEGER = 3;
 	public static final int FLOAT = 0;
 	public static final int CHARACTER = 1;
-
+	
+	// 클래스 변수
 	private static ZabbixDAO zabbixDAO;
 	
+	// private 생성자
 	private ZabbixDAO() {}
 	
+	// 싱글톤
 	public static ZabbixDAO getInstance() {
 		if(zabbixDAO == null) zabbixDAO = new ZabbixDAO();
 		return zabbixDAO;
@@ -36,7 +39,8 @@ public class ZabbixDAO {
 		query.append("select hostid, host, name, status from hosts where available = '1'");
 		
 		ArrayList<HostVO> result = new ArrayList<>();
-			
+		
+		// 자동 자원 해제
 		try(Connection conn = JdbcUtil.getConnection();
 				PreparedStatement pstmt = conn.prepareStatement(query.toString());
 				ResultSet rs = pstmt.executeQuery()) {
@@ -55,21 +59,24 @@ public class ZabbixDAO {
 		return result;
 	}
 	
-	public long selectHostidByHost(String host) {
+	public int selectItemCountByHostid(long hostid) {
 		StringBuffer query = new StringBuffer();
-		query.append("select hostid from hosts where host = ?");
+		query.append("select count(*) from items where flags not in('1','2') and hostid = ?");
 		
-		long result = 0;
+		int result = 0;
 		
 		try {
 			Connection conn = JdbcUtil.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(query.toString());
-			pstmt.setString(1, host);
+			pstmt.setLong(1, hostid);
 			ResultSet rs = pstmt.executeQuery();
 			
 			try(conn; pstmt; rs) {
-				if(rs.next()) result = rs.getLong(1);
+				if(rs.next()) result = rs.getInt(1);
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
+			
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -112,16 +119,19 @@ public class ZabbixDAO {
 		return result;
 	}
 	
-	public int selectItemCountByHostid(long hostid) {
+	public int selectHistoryCountByItemVO(ItemVO itemVO) {
 		StringBuffer query = new StringBuffer();
-		query.append("select count(*) from items where flags not in('1','2') and hostid = ?");
+		query.append("select count(*) ");
+		query.append("from " + getHistoryTable(itemVO.getValueType()) + " ");
+		query.append("where itemid = ?");
+		query.append("  and clock > extract(epoch from date_trunc('second', now() - interval '1 hour'))");
 		
 		int result = 0;
 		
 		try {
 			Connection conn = JdbcUtil.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(query.toString());
-			pstmt.setLong(1, hostid);
+			pstmt.setLong(1, itemVO.getItemid());
 			ResultSet rs = pstmt.executeQuery();
 			
 			try(conn; pstmt; rs) {
@@ -129,7 +139,6 @@ public class ZabbixDAO {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
-			
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -175,33 +184,6 @@ public class ZabbixDAO {
 		return result;
 	}
 	
-	public int selectHistoryCountByItemVO(ItemVO itemVO) {
-		StringBuffer query = new StringBuffer();
-		query.append("select count(*) ");
-		query.append("from " + getHistoryTable(itemVO.getValueType()) + " ");
-		query.append("where itemid = ?");
-		query.append("  and clock > extract(epoch from date_trunc('second', now() - interval '1 hour'))");
-		
-		int result = 0;
-		
-		try {
-			Connection conn = JdbcUtil.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement(query.toString());
-			pstmt.setLong(1, itemVO.getItemid());
-			ResultSet rs = pstmt.executeQuery();
-			
-			try(conn; pstmt; rs) {
-				if(rs.next()) result = rs.getInt(1);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return result;
-	}
-	
 	public ItemVO selectItemByItemid(long itemid) {
 		StringBuffer query = new StringBuffer();
 		query.append("select itemid, type, hostid, name, key_, status, value_type from items ");
@@ -229,6 +211,28 @@ public class ZabbixDAO {
 				e.printStackTrace();
 			}
 			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
+	public long selectHostidByHost(String host) {
+		StringBuffer query = new StringBuffer();
+		query.append("select hostid from hosts where host = ?");
+		
+		long result = 0;
+		
+		try {
+			Connection conn = JdbcUtil.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(query.toString());
+			pstmt.setString(1, host);
+			ResultSet rs = pstmt.executeQuery();
+			
+			try(conn; pstmt; rs) {
+				if(rs.next()) result = rs.getLong(1);
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
